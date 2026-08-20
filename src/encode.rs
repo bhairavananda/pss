@@ -71,7 +71,7 @@ pub const R_LONG: u8 = 0x47;    // ṝ (murdha, dirgha)
 pub const L_SHORT: u8 = 0x48;   // ḷ (danta, hrasva)
 pub const L_LONG: u8 = 0x49;    // ḹ (danta, dirgha)
 pub const E: u8 = 0x4A;         // e (kantha-talu, dirgha)
-pub const AI: u8 = 0x4B;        // ai (kantha-talu, dirgha — PS.21 "vivṛtāvēṅau")
+pub const AI: u8 = 0x4B;        // ai (kantha-talu, dirgha, ativivrita — PS.21)
 pub const O: u8 = 0x4C;         // o (kantha-oshtha, dirgha)
 pub const AU: u8 = 0x4D;        // au (kantha-oshtha, dirgha)
 
@@ -99,7 +99,7 @@ pub const VAKYA_BOUNDARY: u8 = 0xFF;
 /// Encode a Varna to its PSS byte value.
 pub fn encode_varna(v: &Varna) -> u8 {
     match v {
-        Varna::Svara { sthana, kala, .. } => encode_svara(*sthana, *kala),
+        Varna::Svara { sthana, kala, vivrti, .. } => encode_svara(*sthana, *kala, *vivrti),
         Varna::Vyanjana { sthana, prayatna, ghosha, prana, nasika } => {
             encode_vyanjana(*sthana, *prayatna, *ghosha, *prana, *nasika)
         }
@@ -113,26 +113,27 @@ pub fn encode_varna(v: &Varna) -> u8 {
     }
 }
 
-fn encode_svara(sthana: Sthana, kala: Kala) -> u8 {
-    match (sthana, kala) {
-        (Sthana::Kantha, Kala::Hrasva) => A_SHORT,
-        (Sthana::Kantha, Kala::Dirgha) => A_LONG,
-        (Sthana::Talu, Kala::Hrasva) => I_SHORT,
-        (Sthana::Talu, Kala::Dirgha) => I_LONG,
-        (Sthana::Oshtha, Kala::Hrasva) => U_SHORT,
-        (Sthana::Oshtha, Kala::Dirgha) => U_LONG,
-        (Sthana::Murdha, Kala::Hrasva) => R_SHORT,
-        (Sthana::Murdha, Kala::Dirgha) => R_LONG,
-        (Sthana::Danta, Kala::Hrasva) => L_SHORT,
-        (Sthana::Danta, Kala::Dirgha) => L_LONG,
-        (Sthana::KanthaTalu, Kala::Dirgha) => E,
-        (Sthana::KanthaTalu, Kala::Hrasva) => AI, // ai is "more vivrita" (PS.21)
-        (Sthana::KanthaOshtha, Kala::Dirgha) => O,
-        (Sthana::KanthaOshtha, Kala::Hrasva) => AU,
-        // Pluta forms: use the dirgha byte + a pluta marker would be needed,
-        // but for now encode same as dirgha (pluta is rare in text)
-        (s, Kala::Pluta) => encode_svara(s, Kala::Dirgha),
-        _ => unreachable!("invalid sthana/kala combination for svara"),
+fn encode_svara(sthana: Sthana, kala: Kala, vivrti: Option<Vivrti>) -> u8 {
+    match (sthana, vivrti) {
+        // Compound vowels: distinguished by vivrti (PS.21), not kala
+        (Sthana::KanthaTalu, Some(Vivrti::Ativivrita)) => AI,
+        (Sthana::KanthaTalu, _) => E,
+        (Sthana::KanthaOshtha, Some(Vivrti::Ativivrita)) => AU,
+        (Sthana::KanthaOshtha, _) => O,
+        // Simple vowels: distinguished by kala
+        _ => match (sthana, kala) {
+            (Sthana::Kantha, Kala::Hrasva) => A_SHORT,
+            (Sthana::Kantha, Kala::Dirgha | Kala::Pluta) => A_LONG,
+            (Sthana::Talu, Kala::Hrasva) => I_SHORT,
+            (Sthana::Talu, Kala::Dirgha | Kala::Pluta) => I_LONG,
+            (Sthana::Oshtha, Kala::Hrasva) => U_SHORT,
+            (Sthana::Oshtha, Kala::Dirgha | Kala::Pluta) => U_LONG,
+            (Sthana::Murdha, Kala::Hrasva) => R_SHORT,
+            (Sthana::Murdha, Kala::Dirgha | Kala::Pluta) => R_LONG,
+            (Sthana::Danta, Kala::Hrasva) => L_SHORT,
+            (Sthana::Danta, Kala::Dirgha | Kala::Pluta) => L_LONG,
+            _ => unreachable!("invalid sthana/kala combination for svara"),
+        },
     }
 }
 

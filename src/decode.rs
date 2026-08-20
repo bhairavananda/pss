@@ -28,10 +28,11 @@ pub fn decode_varna(byte: u8) -> Option<Varna> {
         R_LONG => return Some(svara(Sthana::Murdha, Kala::Dirgha)),
         L_SHORT => return Some(svara(Sthana::Danta, Kala::Hrasva)),
         L_LONG => return Some(svara(Sthana::Danta, Kala::Dirgha)),
-        E => return Some(svara(Sthana::KanthaTalu, Kala::Dirgha)),
-        AI => return Some(svara(Sthana::KanthaTalu, Kala::Hrasva)),
-        O => return Some(svara(Sthana::KanthaOshtha, Kala::Dirgha)),
-        AU => return Some(svara(Sthana::KanthaOshtha, Kala::Hrasva)),
+        // Compound vowels: all dirgha, distinguished by vivrti (PS.21)
+        E => return Some(compound_svara(Sthana::KanthaTalu, Vivrti::Vivrita)),
+        AI => return Some(compound_svara(Sthana::KanthaTalu, Vivrti::Ativivrita)),
+        O => return Some(compound_svara(Sthana::KanthaOshtha, Vivrti::Vivrita)),
+        AU => return Some(compound_svara(Sthana::KanthaOshtha, Vivrti::Ativivrita)),
         _ => {}
     }
 
@@ -89,7 +90,11 @@ pub fn decode(bytes: &[u8]) -> Vec<Varna> {
 }
 
 fn svara(sthana: Sthana, kala: Kala) -> Varna {
-    Varna::Svara { sthana, kala, pitch: None }
+    Varna::Svara { sthana, kala, vivrti: None, pitch: None }
+}
+
+fn compound_svara(sthana: Sthana, vivrti: Vivrti) -> Varna {
+    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None }
 }
 
 fn decode_vyanjana(byte: u8) -> Varna {

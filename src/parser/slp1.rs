@@ -29,10 +29,11 @@ pub fn parse(input: &str) -> Vec<Varna> {
             'F' => Some(svara(Sthana::Murdha, Kala::Dirgha)),   // ṝ
             'x' => Some(svara(Sthana::Danta, Kala::Hrasva)),    // ḷ (vowel)
             'X' => Some(svara(Sthana::Danta, Kala::Dirgha)),    // ḹ
-            'e' => Some(svara(Sthana::KanthaTalu, Kala::Dirgha)),
-            'E' => Some(svara(Sthana::KanthaTalu, Kala::Hrasva)),  // ai
-            'o' => Some(svara(Sthana::KanthaOshtha, Kala::Dirgha)),
-            'O' => Some(svara(Sthana::KanthaOshtha, Kala::Hrasva)), // au
+            // e, ai, o, au: all dirgha. Distinguished by vivrti degree (PS.21).
+            'e' => Some(compound_svara(Sthana::KanthaTalu, Vivrti::Vivrita)),
+            'E' => Some(compound_svara(Sthana::KanthaTalu, Vivrti::Ativivrita)),   // ai
+            'o' => Some(compound_svara(Sthana::KanthaOshtha, Vivrti::Vivrita)),
+            'O' => Some(compound_svara(Sthana::KanthaOshtha, Vivrti::Ativivrita)), // au
 
             // === Sparsha (ka-varga) ===
             'k' => Some(sparsha(Sthana::Kantha, Ghosha::Aghosha, Prana::Alpaprana)),
@@ -110,7 +111,11 @@ pub fn parse(input: &str) -> Vec<Varna> {
 }
 
 fn svara(sthana: Sthana, kala: Kala) -> Varna {
-    Varna::Svara { sthana, kala, pitch: None }
+    Varna::Svara { sthana, kala, vivrti: None, pitch: None }
+}
+
+fn compound_svara(sthana: Sthana, vivrti: Vivrti) -> Varna {
+    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None }
 }
 
 fn sparsha(sthana: Sthana, ghosha: Ghosha, prana: Prana) -> Varna {

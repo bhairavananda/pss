@@ -84,6 +84,24 @@ pub enum Kala {
     Pluta,
 }
 
+/// Degree of opening for compound vowels (PS.21).
+///
+/// "svarāṇāmūṣmaṇāṃ chaiva vivṛtaṃ karaṇaṃ smṛtam
+///  tēbhyō'pi vivṛtāvēṅau tābhyāmaichau tathaiva cha"
+///
+/// All vowels are vivrita. Among compound vowels, e/o have standard
+/// opening (vivrita), while ai/au have greater opening (ativivrita).
+/// Simple vowels (a, i, u, etc.) have no compound opening — this field
+/// is None for them.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Vivrti {
+    /// Standard compound opening — e, o (guna)
+    Vivrita,
+    /// Greater compound opening — ai, au (vrddhi)
+    /// PS.21: "tābhyāmaichau tathaiva cha"
+    Ativivrita,
+}
+
 /// Pitch accent (PS.11, PS.48).
 ///
 /// "udāttaśchānudāttaścha svaritaścha svarāstrayaḥ"
@@ -118,6 +136,7 @@ pub enum Varna {
     Svara {
         sthana: Sthana,
         kala: Kala,
+        vivrti: Option<Vivrti>,
         pitch: Option<SvaraPitch>,
     },
 

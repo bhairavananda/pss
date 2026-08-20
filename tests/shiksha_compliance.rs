@@ -98,6 +98,25 @@ fn ps18_danta_oshthya() {
     assert_eq!(varnas[0].sthana(), Some(Sthana::DantaOshtha));
 }
 
+/// PS.21: "tēbhyō'pi vivṛtāvēṅau tābhyāmaichau tathaiva cha"
+/// e/o are vivrita (guna), ai/au are ativivrita (vrddhi).
+/// All four are dirgha — they differ only in vivrti degree.
+#[test]
+fn ps21_vivrti() {
+    let varnas = parse("eEoO");
+    // All four are dirgha
+    for v in &varnas {
+        assert_eq!(v.matra_count(), Some(2),
+            "compound vowels should be dirgha (2 matras): {:?}", v);
+    }
+    // e and o are vivrita
+    assert!(matches!(varnas[0], Varna::Svara { vivrti: Some(Vivrti::Vivrita), .. }));
+    assert!(matches!(varnas[2], Varna::Svara { vivrti: Some(Vivrti::Vivrita), .. }));
+    // ai and au are ativivrita
+    assert!(matches!(varnas[1], Varna::Svara { vivrti: Some(Vivrti::Ativivrita), .. }));
+    assert!(matches!(varnas[3], Varna::Svara { vivrti: Some(Vivrti::Ativivrita), .. }));
+}
+
 /// PS.38: "achō'spṛṣṭā" — vowels are asprishta (open, vivrita)
 /// PS.38: "yaṇastvīṣannēmaspṛṣṭāḥ" — semivowels are ishat-sprshta
 /// PS.38: "śēṣāḥ spṛṣṭā halaḥ" — remaining consonants are sprshta

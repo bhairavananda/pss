@@ -9,21 +9,22 @@ pub fn emit(varnas: &[Varna]) -> String {
     for v in varnas {
         let ch = match v {
             // Svaras
-            Varna::Svara { sthana, kala, .. } => match (sthana, kala) {
-                (Sthana::Kantha, Kala::Hrasva) => 'a',
-                (Sthana::Kantha, Kala::Dirgha | Kala::Pluta) => 'A',
-                (Sthana::Talu, Kala::Hrasva) => 'i',
-                (Sthana::Talu, Kala::Dirgha | Kala::Pluta) => 'I',
-                (Sthana::Oshtha, Kala::Hrasva) => 'u',
-                (Sthana::Oshtha, Kala::Dirgha | Kala::Pluta) => 'U',
-                (Sthana::Murdha, Kala::Hrasva) => 'f',
-                (Sthana::Murdha, Kala::Dirgha | Kala::Pluta) => 'F',
-                (Sthana::Danta, Kala::Hrasva) => 'x',
-                (Sthana::Danta, Kala::Dirgha | Kala::Pluta) => 'X',
-                (Sthana::KanthaTalu, Kala::Dirgha) => 'e',
-                (Sthana::KanthaTalu, Kala::Hrasva | Kala::Pluta) => 'E',
-                (Sthana::KanthaOshtha, Kala::Dirgha) => 'o',
-                (Sthana::KanthaOshtha, Kala::Hrasva | Kala::Pluta) => 'O',
+            Varna::Svara { sthana, kala, vivrti, .. } => match (sthana, kala, vivrti) {
+                (Sthana::Kantha, Kala::Hrasva, _) => 'a',
+                (Sthana::Kantha, Kala::Dirgha | Kala::Pluta, _) => 'A',
+                (Sthana::Talu, Kala::Hrasva, _) => 'i',
+                (Sthana::Talu, Kala::Dirgha | Kala::Pluta, _) => 'I',
+                (Sthana::Oshtha, Kala::Hrasva, _) => 'u',
+                (Sthana::Oshtha, Kala::Dirgha | Kala::Pluta, _) => 'U',
+                (Sthana::Murdha, Kala::Hrasva, _) => 'f',
+                (Sthana::Murdha, Kala::Dirgha | Kala::Pluta, _) => 'F',
+                (Sthana::Danta, Kala::Hrasva, _) => 'x',
+                (Sthana::Danta, Kala::Dirgha | Kala::Pluta, _) => 'X',
+                // e/ai distinguished by vivrti (PS.21), not kala
+                (Sthana::KanthaTalu, _, Some(Vivrti::Ativivrita)) => 'E',  // ai
+                (Sthana::KanthaTalu, _, _) => 'e',
+                (Sthana::KanthaOshtha, _, Some(Vivrti::Ativivrita)) => 'O', // au
+                (Sthana::KanthaOshtha, _, _) => 'o',
                 _ => continue,
             },
 
