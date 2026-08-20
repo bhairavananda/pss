@@ -40,12 +40,15 @@ pub fn emit(varnas: &[Varna]) -> String {
                         out.push_str(s);
                     }
                 }
-                // Append accent mark if present
+                // Append accent mark if present (PS.11, PS.45)
                 if let Some(p) = pitch {
                     out.push(match p {
-                        SvaraPitch::Udatta => '\u{0301}',    // combining acute
-                        SvaraPitch::Anudatta => '\u{0300}',  // combining grave
-                        SvaraPitch::Svarita => '\u{030B}',   // combining double acute
+                        SvaraPitch::Udatta => '\u{0301}',           // combining acute
+                        SvaraPitch::Anudatta => '\u{0300}',         // combining grave
+                        SvaraPitch::Svarita => '\u{030B}',          // combining double acute
+                        SvaraPitch::DependentSvarita => '\u{0311}', // combining inverted breve
+                        SvaraPitch::DirghaSvarita => '\u{0302}',    // combining circumflex
+                        SvaraPitch::Pracaya => '\u{0324}',          // combining diaeresis below
                     });
                 }
             }

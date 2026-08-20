@@ -62,23 +62,39 @@ pub fn parse(input: &str) -> Vec<Varna> {
 
 /// Check if a character is a Vedic accent combining mark.
 fn is_accent_mark(c: char) -> bool {
-    matches!(c,
-        '\u{0301}' |  // combining acute accent → udatta
-        '\u{0300}' |  // combining grave accent → anudatta
-        '\u{0951}' |  // devanagari stress sign udatta ॑ → svarita (RV convention)
-        '\u{0952}' |  // devanagari stress sign anudatta ॒ → anudatta
-        '\u{030B}'    // combining double acute → svarita (some sources)
-    )
+    accent_pitch(c).is_some()
 }
 
 /// Map accent mark to SvaraPitch.
+///
+/// Supports multiple conventions used in digital Vedic texts:
+///
+/// Standard combining marks:
+///   U+0301 (acute)        → udatta
+///   U+0300 (grave)        → anudatta
+///   U+030B (double acute) → svarita (jatya)
+///   U+0302 (circumflex)   → svarita (jatya)
+///   U+0311 (inverted breve above) → dependent svarita (some editions)
+///
+/// Devanagari Vedic marks (RV convention):
+///   U+0951 ॑ (udatta sign)   → svarita (in RV, this overbar marks svarita)
+///   U+0952 ॒ (anudatta sign) → anudatta
+///   U+1CDA ᳚ (double overline) → dirgha svarita (some editions)
+///
+/// Note on RV convention: In Rigveda Devanagari, the overbar ॑ marks
+/// svarita (not udatta, despite the Unicode name). Udatta is unmarked.
+/// Anudatta is marked with underbar ॒.
 fn accent_pitch(c: char) -> Option<SvaraPitch> {
     match c {
-        '\u{0301}' => Some(SvaraPitch::Udatta),     // combining acute
-        '\u{0300}' => Some(SvaraPitch::Anudatta),    // combining grave
-        '\u{0951}' => Some(SvaraPitch::Svarita),     // devanagari ॑
-        '\u{0952}' => Some(SvaraPitch::Anudatta),    // devanagari ॒
-        '\u{030B}' => Some(SvaraPitch::Svarita),     // combining double acute
+        '\u{0301}' => Some(SvaraPitch::Udatta),            // combining acute
+        '\u{0300}' => Some(SvaraPitch::Anudatta),           // combining grave
+        '\u{030B}' => Some(SvaraPitch::Svarita),            // combining double acute
+        '\u{0302}' => Some(SvaraPitch::Svarita),            // combining circumflex
+        '\u{0311}' => Some(SvaraPitch::DependentSvarita),   // combining inverted breve
+        '\u{0951}' => Some(SvaraPitch::Svarita),            // devanagari ॑ (svarita in RV)
+        '\u{0952}' => Some(SvaraPitch::Anudatta),           // devanagari ॒
+        '\u{1CDA}' => Some(SvaraPitch::DirghaSvarita),      // vedic double overline
+        '\u{0060}' => Some(SvaraPitch::Pracaya),            // grave accent char (some texts)
         _ => None,
     }
 }

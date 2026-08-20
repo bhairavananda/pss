@@ -75,12 +75,15 @@ pub const AI: u8 = 0x4B;        // ai (kantha-talu, dirgha, ativivrita — PS.21
 pub const O: u8 = 0x4C;         // o (kantha-oshtha, dirgha)
 pub const AU: u8 = 0x4D;        // au (kantha-oshtha, dirgha)
 
-// === Accent overlay (0x60–0x62) ===
-// Applied after a svara byte to mark pitch (PS.11)
+// === Accent overlay (0x60–0x65) ===
+// Applied after a svara byte to mark pitch (PS.11, PS.45, PS.48)
 
 pub const UDATTA: u8 = 0x60;
 pub const ANUDATTA: u8 = 0x61;
 pub const SVARITA: u8 = 0x62;
+pub const DEPENDENT_SVARITA: u8 = 0x63;
+pub const DIRGHA_SVARITA: u8 = 0x64;
+pub const PRACAYA: u8 = 0x65;
 
 // === Ayogavaha (0x70–0x74) — PS.5 ===
 
@@ -202,6 +205,9 @@ pub fn encode(varnas: &[Varna]) -> Vec<u8> {
                 SvaraPitch::Udatta => UDATTA,
                 SvaraPitch::Anudatta => ANUDATTA,
                 SvaraPitch::Svarita => SVARITA,
+                SvaraPitch::DependentSvarita => DEPENDENT_SVARITA,
+                SvaraPitch::DirghaSvarita => DIRGHA_SVARITA,
+                SvaraPitch::Pracaya => PRACAYA,
             });
         }
     }

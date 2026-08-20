@@ -47,7 +47,7 @@ pub fn decode_varna(byte: u8) -> Option<Varna> {
 
 /// Returns true if this byte is an accent overlay.
 pub fn is_accent(byte: u8) -> bool {
-    matches!(byte, UDATTA | ANUDATTA | SVARITA)
+    matches!(byte, UDATTA | ANUDATTA | SVARITA | DEPENDENT_SVARITA | DIRGHA_SVARITA | PRACAYA)
 }
 
 /// Returns true if this byte is a structural boundary.
@@ -76,6 +76,9 @@ pub fn decode(bytes: &[u8]) -> Vec<Varna> {
                         UDATTA => { *pitch = Some(SvaraPitch::Udatta); i += 1; }
                         ANUDATTA => { *pitch = Some(SvaraPitch::Anudatta); i += 1; }
                         SVARITA => { *pitch = Some(SvaraPitch::Svarita); i += 1; }
+                        DEPENDENT_SVARITA => { *pitch = Some(SvaraPitch::DependentSvarita); i += 1; }
+                        DIRGHA_SVARITA => { *pitch = Some(SvaraPitch::DirghaSvarita); i += 1; }
+                        PRACAYA => { *pitch = Some(SvaraPitch::Pracaya); i += 1; }
                         _ => {}
                     }
                 }

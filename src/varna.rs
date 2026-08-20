@@ -102,16 +102,41 @@ pub enum Vivrti {
     Ativivrita,
 }
 
-/// Pitch accent (PS.11, PS.48).
+/// Pitch accent (PS.11, PS.45, PS.48).
 ///
+/// The basic three (PS.11):
 /// "udāttaśchānudāttaścha svaritaścha svarāstrayaḥ"
-/// PS.48: "anudāttō hṛdi jñēyō mūrdhnyudātta udāhṛtaḥ
-///         svaritaḥ karṇamūlīyaḥ"
+///
+/// The full RV system (PS.45 — nava-pada-shayyā):
+/// "antōdāttamādyudāttamudāttamanudāttaṃ nīchasvaritam
+///  madhyōdāttaṃ svaritaṃ dvyudāttaṃ tryudāttamiti navapadaśayyā"
+///
+/// PS.48 locates each in the body:
+/// "anudāttō hṛdi jñēyō mūrdhnyudātta udāhṛtaḥ
+///  svaritaḥ karṇamūlīyaḥ sarvāsyē prachayaḥ smṛtaḥ"
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SvaraPitch {
+    /// Raised pitch — "mūrdhni" (PS.48)
     Udatta,
+    /// Lowered pitch — "hṛdi" (PS.48)
     Anudatta,
+    /// Independent/natural falling pitch (jātya) — "karṇamūlīya" (PS.48)
+    /// Occurs on e, o, ai, au arising from sandhi, and on certain
+    /// inherently svarita syllables.
     Svarita,
+    /// Dependent svarita — automatically placed on the syllable
+    /// immediately following an udatta. Not independently marked in
+    /// most texts but phonologically distinct from jātya svarita.
+    DependentSvarita,
+    /// Dirgha svarita — svarita on a long (dirgha) vowel.
+    /// PS.29-30: "hṛdayādutkarē tiṣṭhan" ... "madhyē tu kampayētkampam"
+    /// Has an extended falling contour, often with kampa (tremolo).
+    DirghaSvarita,
+    /// Leveled/monotone continuation after svarita — "sarvāsyē" (PS.48)
+    /// PS.45: "prachayam" in the nava-pada-shayyā.
+    /// Phonologically distinct from true anudatta: anudatta is a marked
+    /// low tone, pracaya is the absence of tonal movement.
+    Pracaya,
 }
 
 /// Dependent phonemes (PS.5, PS.22).
