@@ -6,6 +6,10 @@ description = "Paniniya Shiksha Serialization — phonological encoding for Sans
 license = "MIT"
 repository = "https://github.com/bhairavananda/pss"
 
+[[bin]]
+name = "pss"
+path = "src/main.rs"
+
 [dependencies]
 
 [dev-dependencies]
