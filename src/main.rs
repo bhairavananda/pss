@@ -1,7 +1,7 @@
 use std::env;
 use std::io::{self, BufRead};
 
-use pss::parser::{slp1 as slp1_parser, iast as iast_parser};
+use pss::parser::{slp1 as slp1_parser, iast as iast_parser, baraha as baraha_parser};
 use pss::emitter::{slp1 as slp1_emitter, iast as iast_emitter};
 use pss::varna::Varna;
 use pss::encode;
@@ -15,13 +15,14 @@ Usage:
   pss bytes <from> <text>      Show PSS byte encoding (hex)
   pss inspect <from> <text>    Show phonological features
 
-Formats: iast, slp1
+Formats: iast, slp1, baraha
 
 Examples:
   pss iast slp1 'kṛṣṇa'
   pss slp1 iast 'kfzRa'
+  pss baraha iast 'kRuShNa'
   pss bytes iast 'śiva'
-  pss inspect iast 'dharma'
+  pss inspect baraha 'dharma'
   echo 'agnimīḷe' | pss iast slp1";
 
 fn main() {
@@ -70,8 +71,9 @@ fn parse(format: &str, text: &str) -> Vec<Varna> {
     match format {
         "iast" => iast_parser::parse(text),
         "slp1" => slp1_parser::parse(text),
+        "baraha" => baraha_parser::parse(text),
         _ => {
-            eprintln!("unknown format: '{}'. supported: iast, slp1", format);
+            eprintln!("unknown format: '{}'. supported: iast, slp1, baraha", format);
             std::process::exit(1);
         }
     }
@@ -81,8 +83,10 @@ fn emit(format: &str, varnas: &[Varna]) -> String {
     match format {
         "iast" => iast_emitter::emit(varnas),
         "slp1" => slp1_emitter::emit(varnas),
+        // Baraha output not yet implemented — emit as IAST
+        "baraha" => iast_emitter::emit(varnas),
         _ => {
-            eprintln!("unknown format: '{}'. supported: iast, slp1", format);
+            eprintln!("unknown format: '{}'. supported: iast, slp1, baraha", format);
             std::process::exit(1);
         }
     }
