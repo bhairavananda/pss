@@ -6,6 +6,11 @@
 /// - Digraphs: kh gh ch jh ṭh ḍh th dh ph bh (aspirates)
 /// - Compound vowels: ai au
 /// - Anusvara (ṃ), visarga (ḥ), chandrabindu (m̐)
+/// - Vedic svara accents (PS.11):
+///   - Combining acute (U+0301) → udatta
+///   - Combining grave (U+0300) → anudatta
+///   - Devanagari stress sign udatta ॑ (U+0951) → svarita
+///   - Devanagari stress sign anudatta ॒ (U+0952) → anudatta
 ///
 /// Longest-match parsing: "kh" → kha, not "k" + "h".
 
@@ -20,27 +25,77 @@ pub fn parse(input: &str) -> Vec<Varna> {
 
     while i < len {
         let c = chars[i];
+
+        // Skip standalone combining accents (already consumed after vowels)
+        if is_accent_mark(c) {
+            i += 1;
+            continue;
+        }
+
         let next = if i + 1 < len { Some(chars[i + 1]) } else { None };
 
         // Try two-character sequences first (longest match)
         if let Some(nc) = next {
-            if let Some(v) = match_digraph(c, nc) {
-                varnas.push(v);
+            if let Some(mut v) = match_digraph(c, nc) {
                 i += 2;
+                // Check for accent after compound vowel
+                apply_accent(&mut v, &chars, &mut i);
+                varnas.push(v);
                 continue;
             }
         }
 
         // Single character
-        if let Some(v) = match_single(c) {
+        if let Some(mut v) = match_single(c) {
+            i += 1;
+            // Check for accent after vowel
+            apply_accent(&mut v, &chars, &mut i);
             varnas.push(v);
+        } else {
+            // whitespace, punctuation, unknown — skip
+            i += 1;
         }
-        // else: whitespace, punctuation, unknown — skip
-
-        i += 1;
     }
 
     varnas
+}
+
+/// Check if a character is a Vedic accent combining mark.
+fn is_accent_mark(c: char) -> bool {
+    matches!(c,
+        '\u{0301}' |  // combining acute accent → udatta
+        '\u{0300}' |  // combining grave accent → anudatta
+        '\u{0951}' |  // devanagari stress sign udatta ॑ → svarita (RV convention)
+        '\u{0952}' |  // devanagari stress sign anudatta ॒ → anudatta
+        '\u{030B}'    // combining double acute → svarita (some sources)
+    )
+}
+
+/// Map accent mark to SvaraPitch.
+fn accent_pitch(c: char) -> Option<SvaraPitch> {
+    match c {
+        '\u{0301}' => Some(SvaraPitch::Udatta),     // combining acute
+        '\u{0300}' => Some(SvaraPitch::Anudatta),    // combining grave
+        '\u{0951}' => Some(SvaraPitch::Svarita),     // devanagari ॑
+        '\u{0952}' => Some(SvaraPitch::Anudatta),    // devanagari ॒
+        '\u{030B}' => Some(SvaraPitch::Svarita),     // combining double acute
+        _ => None,
+    }
+}
+
+/// If the current position has an accent mark and the varna is a svara,
+/// apply the accent to the svara's pitch field.
+fn apply_accent(v: &mut Varna, chars: &[char], i: &mut usize) {
+    if let Varna::Svara { ref mut pitch, .. } = v {
+        while *i < chars.len() {
+            if let Some(p) = accent_pitch(chars[*i]) {
+                *pitch = Some(p);
+                *i += 1;
+            } else {
+                break;
+            }
+        }
+    }
 }
 
 fn match_digraph(c: char, nc: char) -> Option<Varna> {
