@@ -1,0 +1,140 @@
+syntax = "proto3";
+package pss;
+
+// Paniniya Shiksha Serialization (PSS)
+//
+// Protobuf schema for Sanskrit phonological encoding.
+// All enums and messages derive from the Paniniya Shiksha (PS).
+
+// === PS.13, PS.17-18: Place of Articulation ===
+// "aṣṭausthānāni varṇānāmuraḥ kaṇṭhaḥ śirastathā
+//  jihvāmūlaṃ cha dantāścha nāsikōṣṭhaucha tālu cha"
+
+enum Sthana {
+  KANTHA = 0;          // guttural — a, ka-varga, ha, visarga
+  TALU = 1;            // palatal — i, ca-varga, ya, sha
+  MURDHA = 2;          // retroflex — ri, Ta-varga, ra, Sha
+  DANTA = 3;           // dental — lri, ta-varga, la, sa
+  OSHTHA = 4;          // labial — u, pa-varga
+  KANTHA_TALU = 5;     // e, ai (PS.18: ēai tu kaṇṭhatālavyā)
+  KANTHA_OSHTHA = 6;   // o, au (PS.18: ōau kaṇṭhōṣṭhajau)
+  DANTA_OSHTHA = 7;    // va (PS.18: dantyōṣṭhyō vaḥ)
+}
+
+// === PS.38: Articulatory Effort ===
+// "achō'spṛṣṭā yaṇastvīṣannēmaspṛṣṭāḥ śalaḥ smṛtāḥ
+//  śēṣāḥ spṛṣṭā halaḥ prōktā"
+
+enum Prayatna {
+  SPRSHTA = 0;         // full contact — sparsha (stops: ka to ma)
+  ISHAT_SPRSHTA = 1;   // slight contact — antahstha (ya va ra la)
+  VIVRITA = 2;         // open — ushman (sha, Sha, sa, ha) and svaras
+}
+
+// === PS.39: Voicing ===
+// "ñamōnunāsikā ... nādinō hajhaṣaḥ smṛtāḥ
+//  īṣannādā yaṇō jaśaḥ śvāsinastu khaphādayaḥ"
+
+enum Ghosha {
+  AGHOSHA = 0;         // unvoiced — 1st/2nd of varga, sibilants
+  SAGHOSHA = 1;        // voiced — 3rd/4th/5th, semivowels, vowels
+}
+
+// === PS.39: Aspiration (derived from shvasin/nadin distinction) ===
+
+enum Prana {
+  ALPAPRANA = 0;       // unaspirated — 1st/3rd/5th of varga
+  MAHAPRANA = 1;       // aspirated — 2nd/4th of varga
+}
+
+// === PS.11: Vowel Duration ===
+// "hrasvō dīrghaḥ pluta iti kālatō niyamā achi"
+
+enum Kala {
+  HRASVA = 0;          // 1 matra
+  DIRGHA = 1;          // 2 matras
+  PLUTA = 2;           // 3 matras
+}
+
+// === PS.11: Pitch Accent ===
+// "udāttaśchānudāttaścha svaritaścha svarāstrayaḥ"
+
+enum SvaraPitch {
+  PITCH_UNSPECIFIED = 0;  // classical text (no accent marking)
+  UDATTA = 1;             // raised — mūrdhni (PS.48)
+  ANUDATTA = 2;           // lowered — hṛdi (PS.48)
+  SVARITA = 3;            // combined — karṇamūlīya (PS.48)
+}
+
+// === PS.5: Ayogavaha (dependent phonemes) ===
+// "anusvārō visargaścha ka pau chāpi parāśritau"
+// PS.22: "ayōgavāhā vijñēyā āśrayasthānabhāginaḥ"
+
+enum AyogavahaType {
+  ANUSVARA = 0;
+  VISARGA = 1;
+  JIHVAMULIYA = 2;
+  UPADHMANIYA = 3;
+  CHANDRABINDU = 4;
+}
+
+// === Varna Messages ===
+
+message Svara {
+  Sthana sthana = 1;
+  Kala kala = 2;
+  SvaraPitch pitch = 3;
+}
+
+message Vyanjana {
+  Sthana sthana = 1;
+  Prayatna prayatna = 2;
+  Ghosha ghosha = 3;
+  Prana prana = 4;
+  uint32 varga_position = 5;  // 1-5 within varga, 0 if avargiya
+  bool nasika = 6;            // true for 5th of varga (anunasika, PS.39)
+}
+
+message Ayogavaha {
+  AyogavahaType type = 1;
+}
+
+message Varna {
+  oneof varna_type {
+    Svara svara = 1;
+    Vyanjana vyanjana = 2;
+    Ayogavaha ayogavaha = 3;
+  }
+}
+
+// === Higher-Level Units ===
+
+message Akshara {
+  repeated Vyanjana onset = 1;     // consonant cluster (may be empty)
+  Svara nucleus = 2;               // every akshara has a vowel
+  repeated Ayogavaha coda = 3;     // trailing anusvara/visarga
+}
+
+message Pada {
+  repeated Akshara aksharas = 1;
+  repeated Vyanjana halanta = 2;   // word-final consonants without vowel
+}
+
+message Vakya {
+  repeated Pada padas = 1;
+}
+
+// === Mantra with patha alignment ===
+
+message Mantra {
+  string reference = 1;             // e.g. "RV.1.1.1"
+  repeated Pada padapatha = 2;      // ground truth words (sandhi-dissolved)
+  repeated Akshara samhita = 3;     // sandhi-joined surface form
+  repeated KramaPair krama = 4;     // overlapping bigram pairs
+}
+
+message KramaPair {
+  Pada first = 1;
+  Pada second = 2;
+  repeated Akshara joined = 3;      // sandhi-joined form of this pair
+}

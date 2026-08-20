@@ -1,0 +1,11 @@
+[package]
+name = "pss"
+version = "0.1.0"
+edition = "2021"
+description = "Paniniya Shiksha Serialization — phonological encoding for Sanskrit"
+license = "MIT"
+repository = "https://github.com/bhairavananda/pss"
+
+[dependencies]
+
+[dev-dependencies]
