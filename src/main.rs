@@ -2,7 +2,7 @@ use std::env;
 use std::io::{self, BufRead};
 
 use pss::parser::{slp1 as slp1_parser, iast as iast_parser, baraha as baraha_parser};
-use pss::emitter::{slp1 as slp1_emitter, iast as iast_emitter};
+use pss::emitter::{slp1 as slp1_emitter, iast as iast_emitter, devanagari as dev_emitter};
 use pss::varna::Varna;
 use pss::encode;
 
@@ -15,7 +15,7 @@ Usage:
   pss bytes <from> <text>      Show PSS byte encoding (hex)
   pss inspect <from> <text>    Show phonological features
 
-Formats: iast, slp1, baraha
+Formats: iast, slp1, baraha, devanagari (dev)
 
 Examples:
   pss iast slp1 'kṛṣṇa'
@@ -83,10 +83,11 @@ fn emit(format: &str, varnas: &[Varna]) -> String {
     match format {
         "iast" => iast_emitter::emit(varnas),
         "slp1" => slp1_emitter::emit(varnas),
+        "dev" | "devanagari" => dev_emitter::emit(varnas),
         // Baraha output not yet implemented — emit as IAST
         "baraha" => iast_emitter::emit(varnas),
         _ => {
-            eprintln!("unknown format: '{}'. supported: iast, slp1, baraha", format);
+            eprintln!("unknown format: '{}'. supported: iast, slp1, baraha, dev", format);
             std::process::exit(1);
         }
     }
