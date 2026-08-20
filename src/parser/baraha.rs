@@ -103,8 +103,8 @@ fn match_special(chars: &[char], i: usize) -> Option<(Option<Varna>, usize)> {
     // 2-char sequences
     if remaining >= 2 {
         match (chars[i], chars[i+1]) {
-            // ,- = sandhi word-break → space
-            (',', '-') => return Some((Some(Varna::Passthrough(' ')), 2)),
+            // ,- = sandhi join (words connected by sandhi, no break)
+            (',', '-') => return Some((None, 2)),
             // || = double danda
             ('|', '|') => return Some((Some(Varna::Passthrough('॥')), 2)),
             // && = double avagraha
@@ -266,11 +266,11 @@ fn match_one(c: char) -> Option<Varna> {
 
         // === Passthrough ===
         ' ' | '\t' | '\n' | '\r' => Some(Varna::Passthrough(' ')),
-        ',' => Some(Varna::Passthrough(' ')),  // comma = word separator in Vedic Baraha
+        ',' => Some(Varna::Passthrough(' ')),  // comma alone = word separator
         '(' | ')' | '[' | ']' => None,         // skip annotation brackets
         '|' => Some(Varna::Passthrough('।')),  // single pipe = danda
         '0'..='9' => Some(Varna::Passthrough(c)),
-        '-' => None,                            // hyphen = word continuation, skip
+        '-' => None,                            // hyphen = sandhi continuation, skip
 
         _ => None,
     }
@@ -419,11 +419,11 @@ mod tests {
     // === Vedic special convention tests ===
 
     #[test]
-    fn test_sandhi_word_break() {
-        // ,- = sandhi word-break → renders as space
+    fn test_sandhi_join() {
+        // ,- = sandhi join (words connected, no break)
         let v = parse("tvOq,-rjE");
         let spaces: Vec<_> = v.iter().filter(|v| matches!(v, Varna::Passthrough(' '))).collect();
-        assert_eq!(spaces.len(), 1, ",- should produce a space");
+        assert_eq!(spaces.len(), 0, ",- should NOT produce a space (sandhi join)");
     }
 
     #[test]
@@ -473,8 +473,8 @@ mod tests {
         let input = "iqShE tvOq,-rjE tvA#, vAqyava#H sthOpAqyava#H stha";
         let varnas = parse(input);
         let dev = devanagari::emit(&varnas);
-        // Should have spaces, svaras, no stray commas/hyphens
-        assert!(dev.contains(' '), "should have spaces");
+        // sandhi-joined padas should be continuous (no break at ,-)
+        assert!(dev.contains("त्वो॒र्जे"), "tvOq,-rjE should be joined: {}", dev);
         assert!(dev.contains('॒'), "should have anudatta marks");
         assert!(dev.contains('॑'), "should have svarita marks");
         assert!(!dev.contains(','), "commas should not appear in Devanagari");

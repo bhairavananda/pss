@@ -74,10 +74,15 @@ pub fn emit(varnas: &[Varna]) -> String {
             }
 
             Varna::Passthrough(c) => {
-                // Convert ASCII pipes to Devanagari dandas
-                match c {
-                    '|' => out.push('।'),
-                    _ => out.push(*c),
+                let ch = match c {
+                    '|' => '।',
+                    _ => *c,
+                };
+                // Collapse consecutive spaces
+                if ch == ' ' && out.ends_with(' ') {
+                    // skip duplicate space
+                } else {
+                    out.push(ch);
                 }
                 i += 1;
             }
