@@ -75,23 +75,47 @@ pub const AI: u8 = 0x4B;        // ai (kantha-talu, dirgha, ativivrita — PS.21
 pub const O: u8 = 0x4C;         // o (kantha-oshtha, dirgha)
 pub const AU: u8 = 0x4D;        // au (kantha-oshtha, dirgha)
 
-// === Accent overlay (0x60–0x65) ===
-// Applied after a svara byte to mark pitch (PS.11, PS.45, PS.48)
+// === Accent overlay (0x60–0x6B) ===
+// Applied after a svara byte to mark pitch (PS.11, PS.45, Pratishakhyas)
 
 pub const UDATTA: u8 = 0x60;
 pub const ANUDATTA: u8 = 0x61;
-pub const SVARITA: u8 = 0x62;
+pub const SVARITA: u8 = 0x62;         // jatya (independent)
 pub const DEPENDENT_SVARITA: u8 = 0x63;
 pub const DIRGHA_SVARITA: u8 = 0x64;
 pub const PRACAYA: u8 = 0x65;
+pub const KSHAIPRA: u8 = 0x66;
+pub const PRASHLISHTA: u8 = 0x67;
+pub const ABHINIHITA: u8 = 0x68;
+pub const TAIROVYANJANA: u8 = 0x69;
 
-// === Ayogavaha (0x70–0x74) — PS.5 ===
+// === Svara modifiers (0x6A–0x6B) ===
+// Applied after accent overlay (or directly after svara if no accent)
 
-pub const ANUSVARA: u8 = 0x70;
-pub const VISARGA: u8 = 0x71;
-pub const JIHVAMULIYA: u8 = 0x72;
-pub const UPADHMANIYA: u8 = 0x73;
-pub const CHANDRABINDU: u8 = 0x74;
+pub const KAMPA: u8 = 0x6A;           // PS.29-30 tremolo
+pub const RANGA: u8 = 0x6B;           // PS.26-28 nasal resonance
+
+// === Samaveda svara (0x6C–0x72) ===
+
+pub const SAMA_KRUSHTA: u8 = 0x6C;     // 1
+pub const SAMA_PRATHAMA: u8 = 0x6D;    // 2
+pub const SAMA_DVITIYA: u8 = 0x6E;     // 3
+pub const SAMA_TRITIYA: u8 = 0x6F;     // 4
+pub const SAMA_CHATURTHA: u8 = 0x70;   // 5
+pub const SAMA_MANDRA: u8 = 0x71;      // 6
+pub const SAMA_ATISVARYA: u8 = 0x72;   // 7 (lowest)
+
+// === Pluta marker (0x73) ===
+
+pub const PLUTA_MARKER: u8 = 0x73;     // marks 3-matra extension ("3" in texts)
+
+// === Ayogavaha (0x78–0x7C) — PS.5 ===
+
+pub const ANUSVARA: u8 = 0x78;
+pub const VISARGA: u8 = 0x79;
+pub const JIHVAMULIYA: u8 = 0x7A;
+pub const UPADHMANIYA: u8 = 0x7B;
+pub const CHANDRABINDU: u8 = 0x7C;
 
 // === Structural markers ===
 
@@ -199,16 +223,29 @@ pub fn encode(varnas: &[Varna]) -> Vec<u8> {
     let mut bytes = Vec::with_capacity(varnas.len());
     for v in varnas {
         bytes.push(encode_varna(v));
-        // Append accent overlay if present
-        if let Varna::Svara { pitch: Some(p), .. } = v {
-            bytes.push(match p {
-                SvaraPitch::Udatta => UDATTA,
-                SvaraPitch::Anudatta => ANUDATTA,
-                SvaraPitch::Svarita => SVARITA,
-                SvaraPitch::DependentSvarita => DEPENDENT_SVARITA,
-                SvaraPitch::DirghaSvarita => DIRGHA_SVARITA,
-                SvaraPitch::Pracaya => PRACAYA,
-            });
+        if let Varna::Svara { pitch, modifiers, .. } = v {
+            // Append accent overlay if present
+            if let Some(p) = pitch {
+                bytes.push(match p {
+                    SvaraPitch::Udatta => UDATTA,
+                    SvaraPitch::Anudatta => ANUDATTA,
+                    SvaraPitch::Svarita => SVARITA,
+                    SvaraPitch::DependentSvarita => DEPENDENT_SVARITA,
+                    SvaraPitch::DirghaSvarita => DIRGHA_SVARITA,
+                    SvaraPitch::Pracaya => PRACAYA,
+                    SvaraPitch::Kshaipra => KSHAIPRA,
+                    SvaraPitch::Prashlishta => PRASHLISHTA,
+                    SvaraPitch::Abhinihita => ABHINIHITA,
+                    SvaraPitch::Tairovyanjana => TAIROVYANJANA,
+                });
+            }
+            // Append modifiers
+            if modifiers.kampa {
+                bytes.push(KAMPA);
+            }
+            if modifiers.ranga {
+                bytes.push(RANGA);
+            }
         }
     }
     bytes

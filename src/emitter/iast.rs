@@ -15,7 +15,7 @@ pub fn emit(varnas: &[Varna]) -> String {
     for v in varnas {
         match v {
             // Svaras
-            Varna::Svara { sthana, kala, vivrti, pitch } => {
+            Varna::Svara { sthana, kala, vivrti, pitch, .. } => {
                 match (sthana, vivrti) {
                     // Compound vowels: distinguished by vivrti
                     (Sthana::KanthaTalu, Some(Vivrti::Ativivrita)) => out.push_str("ai"),
@@ -45,10 +45,15 @@ pub fn emit(varnas: &[Varna]) -> String {
                     out.push(match p {
                         SvaraPitch::Udatta => '\u{0301}',           // combining acute
                         SvaraPitch::Anudatta => '\u{0300}',         // combining grave
-                        SvaraPitch::Svarita => '\u{030B}',          // combining double acute
+                        SvaraPitch::Svarita => '\u{030B}',          // combining double acute (jatya)
                         SvaraPitch::DependentSvarita => '\u{0311}', // combining inverted breve
                         SvaraPitch::DirghaSvarita => '\u{0302}',    // combining circumflex
                         SvaraPitch::Pracaya => '\u{0324}',          // combining diaeresis below
+                        // Svarita subtypes — emit as svarita with type marker
+                        SvaraPitch::Kshaipra => '\u{030B}',         // same glyph as jatya
+                        SvaraPitch::Prashlishta => '\u{030B}',
+                        SvaraPitch::Abhinihita => '\u{030B}',
+                        SvaraPitch::Tairovyanjana => '\u{030B}',
                     });
                 }
             }

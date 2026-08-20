@@ -111,11 +111,11 @@ pub fn parse(input: &str) -> Vec<Varna> {
 }
 
 fn svara(sthana: Sthana, kala: Kala) -> Varna {
-    Varna::Svara { sthana, kala, vivrti: None, pitch: None }
+    Varna::Svara { sthana, kala, vivrti: None, pitch: None, modifiers: SvaraModifiers::default() }
 }
 
 fn compound_svara(sthana: Sthana, vivrti: Vivrti) -> Varna {
-    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None }
+    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None, modifiers: SvaraModifiers::default() }
 }
 
 fn sparsha(sthana: Sthana, ghosha: Ghosha, prana: Prana) -> Varna {

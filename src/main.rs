@@ -104,13 +104,22 @@ fn cmd_inspect(from: &str, text: &str) {
     let varnas = parse(from, text);
     for v in &varnas {
         match v {
-            Varna::Svara { sthana, kala, vivrti, pitch } => {
+            Varna::Svara { sthana, kala, vivrti, pitch, modifiers } => {
                 let mut desc = format!("{:?} {:?}", sthana, kala);
                 if let Some(vv) = vivrti {
                     desc.push_str(&format!(" {:?}", vv));
                 }
                 if let Some(p) = pitch {
                     desc.push_str(&format!(" {:?}", p));
+                    // Show musical notes (PS.12)
+                    let notes = p.musical_notes().join("+");
+                    desc.push_str(&format!(" ({})", notes));
+                }
+                if modifiers.kampa {
+                    desc.push_str(" kampa");
+                }
+                if modifiers.ranga {
+                    desc.push_str(" ranga");
                 }
                 println!("  svara    {}  [{}]",
                     emit_single(v),

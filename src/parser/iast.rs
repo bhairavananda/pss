@@ -99,13 +99,18 @@ fn accent_pitch(c: char) -> Option<SvaraPitch> {
     }
 }
 
-/// If the current position has an accent mark and the varna is a svara,
-/// apply the accent to the svara's pitch field.
+/// If the current position has an accent mark, pluta marker, or modifier,
+/// apply it to the svara.
 fn apply_accent(v: &mut Varna, chars: &[char], i: &mut usize) {
-    if let Varna::Svara { ref mut pitch, .. } = v {
+    if let Varna::Svara { ref mut pitch, ref mut kala, .. } = v {
         while *i < chars.len() {
-            if let Some(p) = accent_pitch(chars[*i]) {
+            let c = chars[*i];
+            if let Some(p) = accent_pitch(c) {
                 *pitch = Some(p);
+                *i += 1;
+            } else if c == '3' {
+                // Pluta marker — "himkāra3" convention (PS.11, 3 matras)
+                *kala = Kala::Pluta;
                 *i += 1;
             } else {
                 break;
@@ -205,11 +210,11 @@ fn match_single(c: char) -> Option<Varna> {
 }
 
 fn svara(sthana: Sthana, kala: Kala) -> Varna {
-    Varna::Svara { sthana, kala, vivrti: None, pitch: None }
+    Varna::Svara { sthana, kala, vivrti: None, pitch: None, modifiers: SvaraModifiers::default() }
 }
 
 fn compound_svara(sthana: Sthana, vivrti: Vivrti) -> Varna {
-    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None }
+    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None, modifiers: SvaraModifiers::default() }
 }
 
 fn sparsha(sthana: Sthana, ghosha: Ghosha, prana: Prana) -> Varna {

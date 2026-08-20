@@ -74,13 +74,15 @@ pub enum Prana {
 /// Vowel duration (PS.11).
 ///
 /// "hrasvō dīrghaḥ pluta iti kālatō niyamā achi"
+/// PS.49: "chāṣastu vadatē mātrāṃ dvimātraṃ chaiva vāyasaḥ
+///         śikhī rauti trimātraṃ tu nakulastvardhamātrakam"
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Kala {
-    /// 1 matra
+    /// 1 matra (chataka bird, PS.49)
     Hrasva,
-    /// 2 matras
+    /// 2 matras (crow, PS.49)
     Dirgha,
-    /// 3 matras
+    /// 3 matras (peacock, PS.49)
     Pluta,
 }
 
@@ -88,11 +90,6 @@ pub enum Kala {
 ///
 /// "svarāṇāmūṣmaṇāṃ chaiva vivṛtaṃ karaṇaṃ smṛtam
 ///  tēbhyō'pi vivṛtāvēṅau tābhyāmaichau tathaiva cha"
-///
-/// All vowels are vivrita. Among compound vowels, e/o have standard
-/// opening (vivrita), while ai/au have greater opening (ativivrita).
-/// Simple vowels (a, i, u, etc.) have no compound opening — this field
-/// is None for them.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Vivrti {
     /// Standard compound opening — e, o (guna)
@@ -102,41 +99,136 @@ pub enum Vivrti {
     Ativivrita,
 }
 
-/// Pitch accent (PS.11, PS.45, PS.48).
+/// Pitch accent — full Vedic system.
 ///
-/// The basic three (PS.11):
+/// Basic three (PS.11):
 /// "udāttaśchānudāttaścha svaritaścha svarāstrayaḥ"
 ///
-/// The full RV system (PS.45 — nava-pada-shayyā):
+/// Nava-pada-shayyā (PS.45):
 /// "antōdāttamādyudāttamudāttamanudāttaṃ nīchasvaritam
-///  madhyōdāttaṃ svaritaṃ dvyudāttaṃ tryudāttamiti navapadaśayyā"
+///  madhyōdāttaṃ svaritaṃ dvyudāttaṃ tryudāttamiti"
 ///
-/// PS.48 locates each in the body:
-/// "anudāttō hṛdi jñēyō mūrdhnyudātta udāhṛtaḥ
-///  svaritaḥ karṇamūlīyaḥ sarvāsyē prachayaḥ smṛtaḥ"
+/// PS.48: "anudāttō hṛdi jñēyō mūrdhnyudātta udāhṛtaḥ
+///         svaritaḥ karṇamūlīyaḥ sarvāsyē prachayaḥ smṛtaḥ"
+///
+/// Svarita subtypes from the Pratishakhyas (RPr, TPr):
+/// The five types of svarita arise from different sandhi contexts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum SvaraPitch {
+    // === Basic three (PS.11) ===
+
     /// Raised pitch — "mūrdhni" (PS.48)
     Udatta,
     /// Lowered pitch — "hṛdi" (PS.48)
     Anudatta,
-    /// Independent/natural falling pitch (jātya) — "karṇamūlīya" (PS.48)
-    /// Occurs on e, o, ai, au arising from sandhi, and on certain
-    /// inherently svarita syllables.
+    /// Independent/natural svarita (jātya) — "karṇamūlīya" (PS.48)
+    /// On e, o, ai, au arising from sandhi. A true falling pitch.
     Svarita,
-    /// Dependent svarita — automatically placed on the syllable
-    /// immediately following an udatta. Not independently marked in
-    /// most texts but phonologically distinct from jātya svarita.
+
+    // === Extended accents (PS.45, PS.48) ===
+
+    /// Leveled continuation after svarita — "sarvāsyē" (PS.48)
+    /// Distinct from anudatta: not a marked low, but absence of movement.
+    Pracaya,
+
+    // === Svarita subtypes (Pratishakhyas) ===
+
+    /// Dependent svarita — on syllable immediately following udatta.
+    /// Automatic, not independently marked in most texts.
     DependentSvarita,
     /// Dirgha svarita — svarita on a long (dirgha) vowel.
-    /// PS.29-30: "hṛdayādutkarē tiṣṭhan" ... "madhyē tu kampayētkampam"
-    /// Has an extended falling contour, often with kampa (tremolo).
+    /// PS.29-30: extended falling contour, often with kampa.
     DirghaSvarita,
-    /// Leveled/monotone continuation after svarita — "sarvāsyē" (PS.48)
-    /// PS.45: "prachayam" in the nava-pada-shayyā.
-    /// Phonologically distinct from true anudatta: anudatta is a marked
-    /// low tone, pracaya is the absence of tonal movement.
-    Pracaya,
+    /// Kṣaipra — "quick" svarita. Occurs when an udatta-final short
+    /// vowel is followed by a vowel-initial word. The udatta contracts
+    /// and the resulting syllable gets kṣaipra svarita.
+    Kshaipra,
+    /// Praśliṣṭa — svarita from vowel coalescence (sandhi) across
+    /// a word boundary where both vowels merge.
+    Prashlishta,
+    /// Abhinihita — svarita when an udatta vowel at word-end is
+    /// followed by a vowel-initial word and the two coalesce into
+    /// one syllable with avagraha marking the elision.
+    Abhinihita,
+    /// Tairovyañjana — svarita that occurs when a consonant separates
+    /// an udatta syllable from the following syllable that would
+    /// otherwise receive dependent svarita.
+    Tairovyanjana,
+}
+
+impl SvaraPitch {
+    /// Musical note mapping per PS.12.
+    ///
+    /// "udāttē niṣādagāndhārāvanudātta ṛṣabhadhaivatau
+    ///  svaritaprabhavā hyētē ṣaḍjamadhyamapañchamāḥ"
+    pub fn musical_notes(&self) -> &'static [&'static str] {
+        match self {
+            SvaraPitch::Udatta => &["niṣāda", "gāndhāra"],
+            SvaraPitch::Anudatta | SvaraPitch::Pracaya => &["ṛṣabha", "dhaivata"],
+            _ => &["ṣaḍja", "madhyama", "pañchama"],  // svarita-derived
+        }
+    }
+
+    /// Returns true if this is any kind of svarita.
+    pub fn is_svarita(&self) -> bool {
+        matches!(self,
+            SvaraPitch::Svarita |
+            SvaraPitch::DependentSvarita |
+            SvaraPitch::DirghaSvarita |
+            SvaraPitch::Kshaipra |
+            SvaraPitch::Prashlishta |
+            SvaraPitch::Abhinihita |
+            SvaraPitch::Tairovyanjana
+        )
+    }
+}
+
+/// Recitation modifiers for a svara (PS.26-30).
+///
+/// These are performance features that co-occur with pitch accent,
+/// not independent accent types.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct SvaraModifiers {
+    /// Kampa (tremolo) — PS.29-30.
+    /// "hṛdayādutkarē tiṣṭhankāṃsyēna samanusvaran
+    ///  mārdavaṃ cha dvimātraṃ cha jaghanvāँ iti nidarśanam"
+    /// PS.30: "madhyē tu kampayētkampam"
+    /// A wavering of pitch on certain svarita syllables.
+    pub kampa: bool,
+
+    /// Ranga (nasal resonance) — PS.26-28.
+    /// PS.26: "yathā saurāṣṭrikā nārī takraँ ityabhibhāṣatē
+    ///         ēvaṃ raṅgāḥ prayōktavyāḥ"
+    /// PS.28: "hṛdayē chaikamātrastvarddhamātrastu mūrddhani
+    ///         nāsikāyāṃ tathārddhaṃ cha raṅgasyaivaṃ dvimātratā"
+    /// Total duration: 2 matras (1 in chest, ½ in head, ½ in nose).
+    pub ranga: bool,
+}
+
+/// Samaveda svara notation — 7-note system.
+///
+/// The Samaveda uses a completely different tonal system from the
+/// 3-accent RV/YV system. Seven notes (svaras) are denoted by
+/// numerals 1-7 in printed editions.
+///
+/// PS.12 maps the basic three accents to these musical notes:
+/// "svaritaprabhavā hyētē ṣaḍjamadhyamapañchamāḥ"
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum SamaGana {
+    /// 1 — krushta (highest)
+    Krushta = 1,
+    /// 2 — prathama
+    Prathama = 2,
+    /// 3 — dvitiya
+    Dvitiya = 3,
+    /// 4 — tritiya
+    Tritiya = 4,
+    /// 5 — chaturtha
+    Chaturtha = 5,
+    /// 6 — mandra
+    Mandra = 6,
+    /// 7 — atisvarya (lowest)
+    Atisvarya = 7,
 }
 
 /// Dependent phonemes (PS.5, PS.22).
@@ -163,6 +255,7 @@ pub enum Varna {
         kala: Kala,
         vivrti: Option<Vivrti>,
         pitch: Option<SvaraPitch>,
+        modifiers: SvaraModifiers,
     },
 
     /// Consonant (PS.4: "sparśānāṃ pañchaviṃśatiḥ" + "yādayaścha smṛtā hyaṣṭau")
@@ -199,7 +292,6 @@ impl Varna {
     }
 
     /// Returns true if two svaras are savarna (same sthana).
-    /// Used for savarna-dirgha sandhi.
     pub fn is_savarna(&self, other: &Varna) -> bool {
         match (self, other) {
             (Varna::Svara { sthana: s1, .. }, Varna::Svara { sthana: s2, .. }) => s1 == s2,
@@ -227,9 +319,7 @@ impl Varna {
         matches!(self, Varna::Vyanjana { nasika: true, .. })
     }
 
-    /// Returns the matra count for a svara (PS.11).
-    /// PS.49: "chāṣastu vadatē mātrāṃ dvimātraṃ chaiva vāyasaḥ
-    ///         śikhī rauti trimātraṃ tu"
+    /// Returns the matra count for a svara (PS.11, PS.49).
     pub fn matra_count(&self) -> Option<u8> {
         match self {
             Varna::Svara { kala, .. } => Some(match kala {

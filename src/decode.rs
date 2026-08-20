@@ -47,7 +47,7 @@ pub fn decode_varna(byte: u8) -> Option<Varna> {
 
 /// Returns true if this byte is an accent overlay.
 pub fn is_accent(byte: u8) -> bool {
-    matches!(byte, UDATTA | ANUDATTA | SVARITA | DEPENDENT_SVARITA | DIRGHA_SVARITA | PRACAYA)
+    (0x60..=0x6B).contains(&byte)
 }
 
 /// Returns true if this byte is a structural boundary.
@@ -69,9 +69,9 @@ pub fn decode(bytes: &[u8]) -> Vec<Varna> {
         }
 
         if let Some(mut v) = decode_varna(byte) {
-            // Check if next byte is an accent overlay
-            if let Varna::Svara { ref mut pitch, .. } = v {
-                if i + 1 < bytes.len() {
+            // Check for accent overlays and modifiers after svara
+            if let Varna::Svara { ref mut pitch, ref mut modifiers, .. } = v {
+                while i + 1 < bytes.len() {
                     match bytes[i + 1] {
                         UDATTA => { *pitch = Some(SvaraPitch::Udatta); i += 1; }
                         ANUDATTA => { *pitch = Some(SvaraPitch::Anudatta); i += 1; }
@@ -79,7 +79,13 @@ pub fn decode(bytes: &[u8]) -> Vec<Varna> {
                         DEPENDENT_SVARITA => { *pitch = Some(SvaraPitch::DependentSvarita); i += 1; }
                         DIRGHA_SVARITA => { *pitch = Some(SvaraPitch::DirghaSvarita); i += 1; }
                         PRACAYA => { *pitch = Some(SvaraPitch::Pracaya); i += 1; }
-                        _ => {}
+                        KSHAIPRA => { *pitch = Some(SvaraPitch::Kshaipra); i += 1; }
+                        PRASHLISHTA => { *pitch = Some(SvaraPitch::Prashlishta); i += 1; }
+                        ABHINIHITA => { *pitch = Some(SvaraPitch::Abhinihita); i += 1; }
+                        TAIROVYANJANA => { *pitch = Some(SvaraPitch::Tairovyanjana); i += 1; }
+                        KAMPA => { modifiers.kampa = true; i += 1; }
+                        RANGA => { modifiers.ranga = true; i += 1; }
+                        _ => break,
                     }
                 }
             }
@@ -93,11 +99,11 @@ pub fn decode(bytes: &[u8]) -> Vec<Varna> {
 }
 
 fn svara(sthana: Sthana, kala: Kala) -> Varna {
-    Varna::Svara { sthana, kala, vivrti: None, pitch: None }
+    Varna::Svara { sthana, kala, vivrti: None, pitch: None, modifiers: SvaraModifiers::default() }
 }
 
 fn compound_svara(sthana: Sthana, vivrti: Vivrti) -> Varna {
-    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None }
+    Varna::Svara { sthana, kala: Kala::Dirgha, vivrti: Some(vivrti), pitch: None, modifiers: SvaraModifiers::default() }
 }
 
 fn decode_vyanjana(byte: u8) -> Varna {
