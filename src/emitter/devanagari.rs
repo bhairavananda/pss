@@ -43,6 +43,10 @@ pub fn emit(varnas: &[Varna]) -> String {
                         Varna::Ayogavaha(_) => {
                             // Consonant + ayogavaha: inherent 'a' stays
                         }
+                        Varna::Passthrough(_) => {
+                            // Consonant before space/punctuation: virama
+                            out.push('\u{094D}');
+                        }
                     }
                 } else {
                     // Final consonant: emit virama (no inherent vowel at end)
@@ -66,6 +70,15 @@ pub fn emit(varnas: &[Varna]) -> String {
                     AyogavahaType::Jihvamuliya => "\u{0CF1}",   // rare, use Kannada sign
                     AyogavahaType::Upadhmaniya => "\u{0CF2}",   // rare
                 });
+                i += 1;
+            }
+
+            Varna::Passthrough(c) => {
+                // Convert ASCII pipes to Devanagari dandas
+                match c {
+                    '|' => out.push('।'),
+                    _ => out.push(*c),
+                }
                 i += 1;
             }
         }

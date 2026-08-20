@@ -269,6 +269,10 @@ pub enum Varna {
 
     /// Dependent phoneme (PS.5)
     Ayogavaha(AyogavahaType),
+
+    /// Non-phonemic passthrough (spaces, punctuation, numerals).
+    /// Preserved through the pipeline for readable output.
+    Passthrough(char),
 }
 
 impl Varna {
@@ -277,7 +281,7 @@ impl Varna {
         match self {
             Varna::Svara { sthana, .. } => Some(*sthana),
             Varna::Vyanjana { sthana, .. } => Some(*sthana),
-            Varna::Ayogavaha(_) => None,
+            Varna::Ayogavaha(_) | Varna::Passthrough(_) => None,
         }
     }
 

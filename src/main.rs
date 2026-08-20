@@ -147,6 +147,11 @@ fn cmd_inspect(from: &str, text: &str) {
                     typ,
                 );
             }
+            Varna::Passthrough(c) => {
+                if !c.is_whitespace() {
+                    println!("  punct    '{}'", c);
+                }
+            }
         }
     }
 }

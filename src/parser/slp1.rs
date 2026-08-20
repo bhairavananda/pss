@@ -93,10 +93,10 @@ pub fn parse(input: &str) -> Vec<Varna> {
             'H' => Some(Varna::Ayogavaha(AyogavahaType::Visarga)),
             '~' => Some(Varna::Ayogavaha(AyogavahaType::Chandrabindu)),
 
-            // === Whitespace / ignored ===
-            ' ' | '\t' | '\n' | '\r' => None,
+            // Punctuation/whitespace passthrough
+            ' ' | '\t' | '\n' | '\r' | ',' | '-' | '.' | '|' | '(' | ')' | '[' | ']'
+            | ';' | '!' | '/' | '\'' | '"' | '0'..='9' => Some(Varna::Passthrough(ch)),
 
-            // Unknown characters are skipped
             _ => None,
         };
 

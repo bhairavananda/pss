@@ -137,6 +137,10 @@ pub fn encode_varna(v: &Varna) -> u8 {
             AyogavahaType::Upadhmaniya => UPADHMANIYA,
             AyogavahaType::Chandrabindu => CHANDRABINDU,
         },
+        Varna::Passthrough(c) => match c {
+            ' ' => PADA_BOUNDARY,
+            _ => VAKYA_BOUNDARY, // other punctuation as vakya boundary
+        },
     }
 }
 

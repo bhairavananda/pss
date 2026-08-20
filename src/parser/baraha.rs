@@ -202,8 +202,10 @@ fn match_one(c: char) -> Option<Varna> {
             nasika: false,
         }),
 
-        // Whitespace / unknown
-        ' ' | '\t' | '\n' | '\r' => None,
+        // Punctuation passthrough
+        ' ' | '\t' | '\n' | '\r' | ',' | '-' | '.' | '|' | '(' | ')' | '[' | ']'
+        | ';' | '!' | '/' | '\'' | '"' | '0'..='9' => Some(Varna::Passthrough(c)),
+
         _ => None,
     }
 }

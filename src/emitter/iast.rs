@@ -125,6 +125,10 @@ pub fn emit(varnas: &[Varna]) -> String {
                 };
                 out.push_str(s);
             }
+
+            Varna::Passthrough(c) => {
+                out.push(*c);
+            }
         }
     }
 
@@ -191,8 +195,7 @@ mod tests {
         let input = "agnimīḷe purohitam";
         let varnas = parse(input);
         let output = emit(&varnas);
-        // Whitespace stripped by parser
-        assert_eq!(output, "agnimīḷepurohitam");
+        assert_eq!(output, input);
     }
 
     /// PS.11: "udāttaśchānudāttaścha svaritaścha svarāstrayaḥ"

@@ -204,7 +204,10 @@ fn match_single(c: char) -> Option<Varna> {
         'ṃ' => Some(Varna::Ayogavaha(AyogavahaType::Anusvara)),
         'ḥ' => Some(Varna::Ayogavaha(AyogavahaType::Visarga)),
 
-        // Whitespace and unknown
+        // Punctuation/whitespace passthrough
+        ' ' | '\t' | '\n' | '\r' | ',' | '-' | '.' | '|' | '(' | ')' | '[' | ']'
+        | ';' | '!' | '/' | '\'' | '"' | '0'..='9' => Some(Varna::Passthrough(c)),
+
         _ => None,
     }
 }
@@ -300,7 +303,8 @@ mod tests {
 
     #[test]
     fn test_aspirates() {
-        let v = parse("khghchjhṭhḍhthdh phbh");
+        let v: Vec<_> = parse("khghchjhṭhḍhthdh phbh")
+            .into_iter().filter(|v| !matches!(v, Varna::Passthrough(_))).collect();
         assert_eq!(v.len(), 10);
         // kh = kantha, aghosha, mahaprana
         assert!(matches!(v[0], Varna::Vyanjana {

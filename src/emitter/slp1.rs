@@ -91,6 +91,8 @@ pub fn emit(varnas: &[Varna]) -> String {
                 AyogavahaType::Chandrabindu => '~',
                 AyogavahaType::Jihvamuliya | AyogavahaType::Upadhmaniya => continue,
             },
+
+            Varna::Passthrough(c) => *c,
         };
 
         out.push(ch);
@@ -117,9 +119,7 @@ mod tests {
         for input in inputs {
             let varnas = parse(input);
             let output = emit(&varnas);
-            // Whitespace is stripped by parser, so compare without spaces
-            let expected: String = input.chars().filter(|c| !c.is_whitespace()).collect();
-            assert_eq!(output, expected, "roundtrip failed for: {}", input);
+            assert_eq!(output, input, "roundtrip failed for: {}", input);
         }
     }
 }

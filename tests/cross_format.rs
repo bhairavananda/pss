@@ -86,7 +86,7 @@ fn test_compound_vowels_cross_format() {
     // IAST ai/au → SLP1 E/O
     let v = iast_parser::parse("aindra aurṇavābha");
     let slp1 = slp1_emitter::emit(&v);
-    assert_eq!(slp1, "EndraOrRavABa");
+    assert_eq!(slp1, "Endra OrRavABa");
 
     // SLP1 E/O → IAST ai/au
     let v2 = slp1_parser::parse("EndrA");
