@@ -11,6 +11,12 @@
 /// - Ru = ṛ, Roo = ṝ
 /// - M = anusvara, H = visarga (after vowel)
 ///
+/// Vedic svara accents (KYV/Taittiriya convention):
+/// - q after vowel = anudatta (lowered pitch)
+/// - # after vowel = svarita (falling pitch)
+/// - $ after vowel = anudatta (phrase-final variant)
+/// - unmarked = udatta (KYV convention: udatta is default)
+///
 /// Longest-match parsing required due to multi-character sequences.
 
 use crate::varna::*;
@@ -23,11 +29,18 @@ pub fn parse(input: &str) -> Vec<Varna> {
     let mut i = 0;
 
     while i < len {
+        // Skip accent markers (handled after vowel parsing)
+        if is_baraha_accent(chars[i]) {
+            i += 1;
+            continue;
+        }
+
         // Try 3-char sequences first
         if i + 2 < len {
             if let Some(v) = match_three(chars[i], chars[i + 1], chars[i + 2]) {
                 varnas.push(v);
                 i += 3;
+                apply_baraha_accent(&mut varnas, &chars, &mut i);
                 continue;
             }
         }
@@ -37,6 +50,7 @@ pub fn parse(input: &str) -> Vec<Varna> {
             if let Some(v) = match_two(chars[i], chars[i + 1]) {
                 varnas.push(v);
                 i += 2;
+                apply_baraha_accent(&mut varnas, &chars, &mut i);
                 continue;
             }
         }
@@ -44,12 +58,39 @@ pub fn parse(input: &str) -> Vec<Varna> {
         // Single char
         if let Some(v) = match_one(chars[i]) {
             varnas.push(v);
+            i += 1;
+            apply_baraha_accent(&mut varnas, &chars, &mut i);
+        } else {
+            i += 1;
         }
-
-        i += 1;
     }
 
     varnas
+}
+
+/// Check if a character is a Baraha Vedic accent marker.
+fn is_baraha_accent(c: char) -> bool {
+    matches!(c, 'q' | '#' | '$')
+}
+
+/// After parsing a varna, check if the next char is an accent marker.
+/// If the last varna is a svara, apply the accent to it.
+fn apply_baraha_accent(varnas: &mut Vec<Varna>, chars: &[char], i: &mut usize) {
+    while *i < chars.len() && is_baraha_accent(chars[*i]) {
+        let pitch = match chars[*i] {
+            'q' => SvaraPitch::Anudatta,
+            '#' => SvaraPitch::Svarita,
+            '$' => SvaraPitch::Anudatta,  // phrase-final anudatta
+            _ => unreachable!(),
+        };
+        // Apply to the last svara in the varnas list
+        // In Baraha, accent follows the vowel of the akshara, so
+        // we need to find the last svara and set its pitch
+        if let Some(Varna::Svara { pitch: ref mut p, .. }) = varnas.last_mut() {
+            *p = Some(pitch);
+        }
+        *i += 1;
+    }
 }
 
 fn match_three(a: char, b: char, c: char) -> Option<Varna> {
@@ -114,8 +155,8 @@ fn match_one(c: char) -> Option<Varna> {
         'I' => Some(svara(Sthana::Talu, Kala::Dirgha)),
         'u' => Some(svara(Sthana::Oshtha, Kala::Hrasva)),
         'U' => Some(svara(Sthana::Oshtha, Kala::Dirgha)),
-        'e' => Some(compound_svara(Sthana::KanthaTalu, Vivrti::Vivrita)),
-        'o' => Some(compound_svara(Sthana::KanthaOshtha, Vivrti::Vivrita)),
+        'e' | 'E' => Some(compound_svara(Sthana::KanthaTalu, Vivrti::Vivrita)),
+        'o' | 'O' => Some(compound_svara(Sthana::KanthaOshtha, Vivrti::Vivrita)),
 
         // === Unaspirated stops (aspirates handled in match_two) ===
         'k' => Some(sparsha(Sthana::Kantha, Ghosha::Aghosha, Prana::Alpaprana)),
