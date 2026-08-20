@@ -31,9 +31,18 @@ pub fn emit(varnas: &[Varna]) -> String {
                             if let Some(m) = matra {
                                 out.push_str(m);
                             }
-                            // else: inherent 'a', no matra needed
-                            emit_pitch(&mut out, *pitch);
                             i += 2;
+                            // Emit any following ayogavaha BEFORE the accent mark
+                            let pitch_val = *pitch;
+                            while i < len {
+                                if let Varna::Ayogavaha(typ) = &varnas[i] {
+                                    out.push_str(ayogavaha_str(typ));
+                                    i += 1;
+                                } else {
+                                    break;
+                                }
+                            }
+                            emit_pitch(&mut out, pitch_val);
                             continue;
                         }
                         Varna::Vyanjana { .. } => {
@@ -58,8 +67,19 @@ pub fn emit(varnas: &[Varna]) -> String {
             Varna::Svara { pitch, .. } => {
                 // Independent vowel form (start of word or after another vowel)
                 out.push_str(svara_independent(&varnas[i]));
-                emit_pitch(&mut out, *pitch);
                 i += 1;
+                // Emit any following ayogavaha BEFORE the accent mark
+                let pitch_val = *pitch;
+                while i < len {
+                    if let Varna::Ayogavaha(typ) = &varnas[i] {
+                        out.push_str(ayogavaha_str(typ));
+                        i += 1;
+                    } else {
+                        break;
+                    }
+                }
+                emit_pitch(&mut out, pitch_val);
+                continue;
             }
 
             Varna::Ayogavaha(typ) => {
@@ -90,6 +110,16 @@ pub fn emit(varnas: &[Varna]) -> String {
     }
 
     out
+}
+
+fn ayogavaha_str(typ: &AyogavahaType) -> &'static str {
+    match typ {
+        AyogavahaType::Anusvara => "\u{0902}",     // ं
+        AyogavahaType::Visarga => "\u{0903}",       // ः
+        AyogavahaType::Chandrabindu => "\u{0901}",  // ँ
+        AyogavahaType::Jihvamuliya => "\u{0CF1}",
+        AyogavahaType::Upadhmaniya => "\u{0CF2}",
+    }
 }
 
 /// Emit Vedic accent marks in Devanagari (RV convention).

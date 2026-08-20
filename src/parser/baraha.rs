@@ -46,6 +46,16 @@ pub fn parse(input: &str) -> Vec<Varna> {
             continue;
         }
 
+        // Handle (gm) — needs to push multiple varnas
+        if i + 3 < len && chars[i] == '(' && chars[i+1] == 'g' && chars[i+2] == 'm' && chars[i+3] == ')' {
+            // ga + anusvara (renders as ग्ं in Devanagari)
+            varnas.push(sparsha(Sthana::Kantha, Ghosha::Saghosha, Prana::Alpaprana)); // ga
+            varnas.push(Varna::Ayogavaha(AyogavahaType::Anusvara));
+            i += 4;
+            apply_baraha_accent(&mut varnas, &chars, &mut i);
+            continue;
+        }
+
         // Try multi-char special sequences (longest match first)
         if let Some((v, consumed)) = match_special(&chars, i) {
             if let Some(varna) = v {
@@ -95,9 +105,13 @@ pub fn parse(input: &str) -> Vec<Varna> {
 fn match_special(chars: &[char], i: usize) -> Option<(Option<Varna>, usize)> {
     let remaining = chars.len() - i;
 
-    // 4-char: (gm) — anusvara nasalization
+    // 4-char: (gm) — nasalized gum sound = ग् + ं (ga + virama + anusvara)
+    // This is NOT just anusvara — it's the specific phonetic realization
+    // of anusvara as a velar nasal stop + nasalization.
+    // We return None here and handle it by pushing multiple varnas below.
     if remaining >= 4 && chars[i] == '(' && chars[i+1] == 'g' && chars[i+2] == 'm' && chars[i+3] == ')' {
-        return Some((Some(Varna::Ayogavaha(AyogavahaType::Anusvara)), 4));
+        // Can't return multiple varnas from match_special, so handle inline
+        return None; // fall through — handled in parse() directly
     }
 
     // 2-char sequences
@@ -270,7 +284,7 @@ fn match_one(c: char) -> Option<Varna> {
         '(' | ')' | '[' | ']' => None,         // skip annotation brackets
         '|' => Some(Varna::Passthrough('।')),  // single pipe = danda
         '0'..='9' => Some(Varna::Passthrough(c)),
-        '-' => None,                            // hyphen = sandhi continuation, skip
+        '-' => Some(Varna::Passthrough('-')),    // hyphen = visible word-boundary marker
 
         _ => None,
     }
@@ -435,11 +449,12 @@ mod tests {
 
     #[test]
     fn test_gm_anusvara() {
-        // (gm) = anusvara nasalization
+        // (gm) = ga + anusvara (nasalized gum sound, renders as ग्ं)
         let v: Vec<_> = parse("a(gm)").into_iter()
             .filter(|v| !matches!(v, Varna::Passthrough(_))).collect();
-        assert_eq!(v.len(), 2); // a + anusvara
-        assert!(matches!(v[1], Varna::Ayogavaha(AyogavahaType::Anusvara)));
+        assert_eq!(v.len(), 3); // a + ga + anusvara
+        assert!(matches!(v[1], Varna::Vyanjana { sthana: Sthana::Kantha, .. })); // ga
+        assert!(matches!(v[2], Varna::Ayogavaha(AyogavahaType::Anusvara)));
     }
 
     #[test]
